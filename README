@@ -32,6 +32,7 @@ hi everyone! someone has asked me to make some documentation for the script, so 
 	* faad: to decode aac's. found at http://www.audiocoding.com
 	* flac: to encode/decode flac's. found at http://flac.sourceforge.net
 	* mac: to encode/decode mac's. can't remember where i found it. look for it. it's out there : ) but really, if you find it, type me the address in an email! thankyou! : )
+        * opus: to encode/decode opus'es. found at http://opus-codec.org/
 
 === the end ===
 

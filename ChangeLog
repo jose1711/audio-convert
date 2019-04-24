@@ -1,3 +1,10 @@
+=== audio-convert 0.3.2 ===
+
+2019-04-24	Jose Riha <jose1711 gmail com>
+
+	* add experimental support for conversion from/to opus
+	* moved to github
+
 === audio-convert 0.3.1.1 ===
 
 2005-11-11	thetroublemaker <thetroublemaker@inventati.org>

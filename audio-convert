@@ -1,10 +1,10 @@
 #!/bin/bash
 #
 #
-# audio convert 0.3.1
+# audio convert 0.3.2
 #
-# a program to convert wav, ogg, mp3, mpc, flac, ape, aac or wma files into 
-# wav, ogg, mp3, mpc, flac, ape or aac files. with an easy to use interface
+# a program to convert wav, ogg, mp3, mpc, flac, ape, aac, wma or opus files
+# into wav, ogg, mp3, mpc, flac, ape, aac or opus files. with an easy to use interface
 # it's actually possible to fill in the tags for a few formats, pass them on
 # from format to format, and choose the quality of compression.
 #
@@ -32,6 +32,7 @@
 #	file >= 4.16
 #       mplayer -- if you want to decode wma files
 #       lame
+#       opus-tools
 #       vorbis tools
 #       id3tag
 #       musepack-tools
@@ -45,7 +46,7 @@
 
 set -x
 
-version="0.3.1"
+version="0.3.2"
 #################################################
 #       TRADUCTIONS
         ###### Default = English #####
@@ -242,6 +243,11 @@ get_field_names ()
         track_number=`zenity --entry --title="$title" --text="$ask_track"`
 }
 
+get_opus_quality ()
+{
+        zenity --title="$title" --list --radiolist --column="" --column="$ask_quality" -- FALSE "6" FALSE "10" FALSE "32" FALSE "64" FALSE "96" TRUE "128" FALSE "196" FALSE "256"
+}
+
 get_ogg_quality ()
 {
         zenity --title="$title" --list --radiolist --column="" --column="$ask_quality" -- "-1" FALSE "0" FALSE "1" FALSE "2" FALSE "3" FALSE "4" FALSE "5" FALSE "6" TRUE "7" FALSE "8" FALSE "9" FALSE "10"
@@ -298,6 +304,10 @@ get_quality ()
 	then
 		quality="$(get_aac_quality)"
 	fi
+	if [ "$1" == "opus" ]
+	then
+		quality="$(get_opus_quality)"
+	fi
 }
 
 get_metatags ()
@@ -315,6 +325,13 @@ get_metatags ()
 		album_name=`ogginfo "$1" | grep album | cut -d \= -f 2`
 		song_name=`ogginfo "$1" | grep title | cut -d \= -f 2`
 		track_number=`ogginfo "$1" | grep tracknumber | cut -d \= -f 2`
+	fi
+	if (is_opus "$1")
+        then
+		artist_name=`opusinfo "$1" | grep artist | cut -d \= -f 2`
+		album_name=`opusinfo "$1" | grep album | cut -d \= -f 2`
+		song_name=`opusinfo "$1" | grep title | cut -d \= -f 2`
+		track_number=`opusinfo "$1" | grep tracknumber | cut -d \= -f 2`
 	fi
 	if (is_flac "$1")
 	then
@@ -350,6 +367,26 @@ mp3_parse_fields ()
         then
                 mp3_fields=("${mp3_fields[@]}" -t"$track_number")
         fi
+}
+
+opus_parse_fields ()
+{
+	if [ "$artist_name" ]
+	then
+		opus_fields=(--artist "$artist_name")
+	fi
+	if [ "$album_name" ]
+	then
+		opus_fields=("${opus_fields[@]}" --album "$album_name")
+	fi
+	if [ "$song_name" ]
+	then
+		opus_fields=("${opus_fields[@]}" --title "$song_name")
+	fi
+	if [ "$track_number" ]
+	then
+		opus_fields=("${opus_fields[@]}" --tracknumber "$track_number")
+	fi
 }
 
 ogg_parse_fields ()
@@ -415,6 +452,11 @@ aac_parse_fields ()
         fi
 }
 
+is_opus ()
+{
+	file -b "$1" | grep 'Opus audio' || echo $1 | grep -i '\.opus$'
+}
+
 is_mp3 ()
 {
 	file -b "$1" | grep 'MP3' || echo $1 | grep -i '\.mp3$'
@@ -452,12 +494,24 @@ is_wav()
 
 is_wma()
 {
-	file -b "$1" | grep 'Microsoft' || echo $1 | grep -i '\.wma$'
+	file -b "$1" | grep 'Microsoft ASF' || echo $1 | grep -i '\.wma$'
 }
 
 mp3_encode ()
 {
 	lame -m auto --preset $quality "$2" "$3" 2>&1 | awk -vRS='\r' '(NR>3){gsub(/[()%|]/," ");print $2; fflush();}' | zenity --progress --title="$title" --text="$conversion $1" --auto-close
+}
+
+opus_encode ()
+{
+	if [ $fields -eq 0 ] || [ $pass_metatags -eq 0 ]
+	then
+		opus_parse_fields
+		opusenc --bitrate $quality "${opus_fields[@]}" "$2" "$3" 2>&1 | awk -vRS='\r' '(NR>3 && $1){gsub(/[()%|\\\]]/," ");print $2; fflush();}' | zenity --progress --title="$title" --text="$conversion $1" --auto-close
+	else
+		opusenc --bitrate $quality "$2" "$3" 2>&1 | awk -vRS='\r' '(NR>3 && $1){gsub(/[()%|\\\]]/," ");print $2; fflush();}' | zenity --progress --title="$title" --text="$conversion $1" --auto-close
+	fi
+
 }
 
 ogg_encode ()
@@ -501,6 +555,12 @@ mp3_decode ()
 {
 	temp_file=`echo "$1" | sed 's/\.\w*$/'.wav'/'`
 	lame --decode "$1" "$temp_file" 2>&1 | awk -vRS='\r' -F'[ /]+' '(NR>2){if((100*$2/$3)<=100)print 100*$2/$3; fflush();}' | zenity --progress --title="$title" --text="$2 $1" --auto-close
+}
+
+opus_decode ()
+{
+	temp_file=`echo "$1" | sed 's/\.\w*$/'.wav'/'`
+	opusdec "$1" "$temp_file" 2>&1
 }
 
 ogg_decode ()
@@ -563,11 +623,11 @@ ask_to_pass_metatags ()
 question_list ()
 {
 	if [ "$formatout" == "mp3" ] || [ "$formatout" == "ogg" ] || [ "$formatout" == "flac" ] || \
-	   [ "$formatout" == "aac" ]
+	   [ "$formatout" == "aac" ] || [ "$formatout" == "opus" ]
 	then
         	#pass_metatags=1
 
-        	if (is_mp3 "$1") || (is_ogg "$1") || (is_flac "$1") || (is_aac "$1")
+		if (is_mp3 "$1") || (is_ogg "$1") || (is_flac "$1") || (is_aac "$1") || (is_opus "$1")
         	then
                 	ask_to_pass_metatags    # ask if user wants metatags to be passed on
         	fi
@@ -693,9 +753,94 @@ caf () # fonction "convert audio file"
                         rm -f "$temp_file"
                         break
                 fi
+		if [ "$3" = "opus" ]
+		then # mp3-2-opus
+			if [ $pass_metatags -eq 0 ]
+			then
+				get_metatags "$1"
+			elif [ $fields -eq 0 ]
+			then
+				get_field_names "$1"
+			fi
+			mp3_decode "$1" "$decoding"
+			opus_encode "$1" "$temp_file" "$2"
+			rm -f "$temp_file"
+			break
+		fi
                 if [ "$3" = "wav" ]
                 then # mp3-2-wav
                         mp3_decode "$1" "$conversion"
+                fi
+		break
+        fi
+        ### Format in_file = opus ###
+        if (is_opus "$1")
+	then
+                if [ "$3" = "mp3" ]
+		then # opus-2-mp3
+			opus_decode "$1" "$decoding"
+			mp3_encode "$1" "$temp_file" "$2"
+			if [ $pass_metatags -eq 0 ]
+			then
+				get_metatags "$1"
+			elif [ $fields -eq 0 ]
+                        then
+                        	get_field_names "$1"
+			fi
+			if [ $pass_metatags -eq 0 ] || [ $fields -eq 0 ]
+			then
+				mp3_parse_fields
+				id3tag "${mp3_fields[@]}" "$2"
+			fi
+			rm -f "$temp_file"
+			break
+		fi
+                if [ "$3" = "mpc" ]
+                then # opus-2-mpc
+			opus_decode "$1" "$decoding"
+                        mpc_encode "$1" "$temp_file" "$2"
+			rm -f "$temp_file"
+			break
+                fi
+		if [ "$3" = "flac" ]
+		then # opus-2-flac
+			opus_decode "$1" "$decoding"
+			flac_encode "$1" "$temp_file" "$2"
+			if [ $pass_metatags -eq 0 ]
+			then
+				get_metatags "$1"
+			elif [ $fields -eq 0 ]
+                        then
+                                get_field_names "$1"
+			fi
+			flac_set_tags "$2"
+			rm -f "$temp_file"
+			break
+		fi
+		if [ "$3" = "ape" ]
+		then # opus-2-ape
+			opus_decode "$1" "$decoding"
+			mac_encode "$1" "$temp_file" "$2"
+			rm -f "$temp_file"
+			break
+		fi
+		if [ "$3" = "aac" ]
+                then # opus-2-aac
+                        if [ $pass_metatags -eq 0 ]
+                        then
+                                get_metatags "$1"
+                        elif [ $fields -eq 0 ]
+                        then
+                                get_field_names "$1"
+                        fi
+                        opus_decode "$1" "$decoding"
+                        aac_encode "$1" "$temp_file" "$2"
+                        rm -f "$temp_file"
+                        break
+                fi
+                if [ "$3" = "wav" ]
+                then # opus-2-wav
+                        opus_decode "$1" "$conversion"
                 fi
 		break
         fi
@@ -743,6 +888,20 @@ caf () # fonction "convert audio file"
 			rm -f "$temp_file"
 			break
 		fi
+		if [ "$3" = "opus" ]
+		then # ogg-2-opus
+			if [ $pass_metatags -eq 0 ]
+			then
+				get_metatags "$1"
+			elif [ $fields -eq 0 ]
+			then
+				get_field_names "$1"
+			fi
+			ogg_decode "$1" "$decoding"
+			opus_encode "$1" "$temp_file" "$2"
+			rm -f "$temp_file"
+			break
+		fi
 		if [ "$3" = "ape" ]
 		then # ogg-2-ape
 			ogg_decode "$1" "$decoding"
@@ -786,6 +945,17 @@ caf () # fonction "convert audio file"
 			fi
                         mpc_decode "$1" "$decoding"
 			mp3_encode "$1" "$temp_file" "$2"
+			rm -f "$temp_file"
+			break
+                fi
+                if [ "$3" = "opus" ]
+                then # mpc-2-opus
+			if [ $fields -eq 0 ]
+                        then
+                        	get_field_names "$1"
+			fi
+                        mpc_decode "$1" "$decoding"
+			opus_encode "$1" "$temp_file" "$2"
 			rm -f "$temp_file"
 			break
                 fi
@@ -858,6 +1028,20 @@ caf () # fonction "convert audio file"
 			rm -f "$temp_file"
 			break
 		fi
+		if [ "$3" = "opus" ]
+		then # flac-2-opus
+			if [ $pass_metatags -eq 0 ]
+			then
+				get_metatags "$1"
+			elif [ $fields -eq 0 ]
+                        then
+				get_field_names "$1"
+			fi
+			flac_decode "$1" "$decoding"
+			opus_encode "$1" "$temp_file" "$2"
+			rm -f "$temp_file"
+			break
+		fi
 		if [ "$3" = "ogg" ]
 		then # flac-2-ogg
 			if [ $pass_metatags -eq 0 ]
@@ -922,6 +1106,17 @@ caf () # fonction "convert audio file"
 			fi
 			mac_decode "$1" "$decoding"
 			mp3_encode "$1" "$temp_file" "$2"
+			rm -f "$temp_file"
+			break
+		fi
+		if [ "$3" = "opus" ]
+		then # ape-2-opus
+			if [ $fields -eq 0 ]
+                        then
+				get_field_names "$1"
+			fi
+			mac_decode "$1" "$decoding"
+			opus_encode "$1" "$temp_file" "$2"
 			rm -f "$temp_file"
 			break
 		fi
@@ -994,6 +1189,20 @@ caf () # fonction "convert audio file"
                         rm -f "$temp_file"
                         break
                 fi
+		if [ "$3" = "opus" ]
+                then # aac-2-opus
+                        if [ $pass_metatags -eq 0 ]
+                        then
+                                get_metatags "$1"
+                        elif [ $fields -eq 0 ]
+                        then
+                                get_field_names "$1"
+                        fi
+                        aac_decode "$1" "$decoding"
+                        opus_encode "$1" "$temp_file" "$2"
+                        rm -f "$temp_file"
+                        break
+                fi
 		if [ "$3" = "ogg" ]
                 then # aac-2-ogg
                         if [ $pass_metatags -eq 0 ]
@@ -1058,6 +1267,15 @@ caf () # fonction "convert audio file"
 			fi
 			break
                 fi
+                if [ "$3" = "opus" ]
+                then # wav-2-opus
+			if [ $fields -eq 0 ]
+                        then
+	                        get_field_names "$1"
+			fi
+                        opus_encode "$1" "$1" "$2"
+			break
+                fi
                 if [ "$3" = "ogg" ]
                 then # wav-2-ogg
 			if [ $fields -eq 0 ]
@@ -1116,6 +1334,18 @@ caf () # fonction "convert audio file"
                 if [ "$3" = "wav" ]
                 then # wma-2-wav
                         wma_decode "$1" "$conversion"
+                fi
+
+                if [ "$3" = "opus" ]
+                then # wma-2-opus
+			if [ $fields -eq 0 ]
+                        then
+	                        get_field_names "$1"
+			fi
+                        wma_decode "$1" "$decoding"
+                        opus_encode "$1" "$temp_file" "$2"
+                        rm -f "$temp_file"
+			break
                 fi
 
                 if [ "$3" = "ogg" ]
@@ -1179,7 +1409,7 @@ if [ $# -eq 0 ]; then
 fi
 ######## make a list of available formats, and check if we can decode the file #######
 if !(is_mp3 "$1") && !(is_ogg "$1") && !(is_mpc "$1") && !(is_flac "$1") && !(is_mac "$1") && \
-   !(is_aac "$1") && !(is_wav "$1") && !(is_wma "$1")
+   !(is_aac "$1") && !(is_wav "$1") && !(is_wma "$1") && !(is_opus "$1")
 then
 	zenity --error --title="$warning" --text="$not_supported"
         exit 1
@@ -1197,6 +1427,19 @@ else	# if we don't have lame, check if the file to convert is an mp3
 		zenity --error --title="$warning" --text="$no_codec lame"
 		exit 1
 	fi
+fi
+if which opusenc 2>/dev/null
+then
+        if !(is_opus "$1")	# if we have opus-tools, and the file to convert is not an
+        then			# opus, add opus to the list of formats to convert to
+                depformat="$depformat opus"
+        fi
+else    # if we don't have opus-tools, check if the file to convert is an opus
+        if (is_opus "$1")
+        then
+                zenity --error --title="$warning" --text="$no_codec opus-tools"
+                exit 1
+        fi
 fi
 if which oggenc 2>/dev/null
 then
