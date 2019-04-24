@@ -1,0 +1,164 @@
+=== audio-convert 0.3.1.1 ===
+
+2005-11-11	thetroublemaker <thetroublemaker@inventati.org>
+
+	* corrected a bug in the installer. 'make -p' becomes
+	  'mkdir -p'.
+
+=== audio-convert 0.3.1 ===
+
+2005-11-06	thetroublemaker <thetroublemaker@inventati.org>
+
+	* fixed the 'é' bug in 'ask_track' in french translation
+	  and in 'recur' in portuguese translation
+	* modified 'mp3_parse_fields' function for efficiency
+	* added the program title to the completed message
+	* rewrote the question askin' process. instead of several
+	  questions you now get a checklist with the options
+	* updated english and italian translations to match the
+	  new way to ask questions
+	* updated dutch and spanish translations thanks to linmix
+	  <linmix@gmail.com>
+	* changed the 'title' value in french translation, which
+	  reported the original program name
+
+2005-11-05	thetroublemaker <thetroublemaker@inventati.org>
+
+	* fixed a bug in the french translation which prevented
+	  quality from bein' asked, which of course prevented
+	  pretty much every other step. replaced 'é' with 'e'
+
+2005-11-03	thetroublemaker <thetroublemaker@inventati.org>
+
+	* updated the introduction
+	* changed file recognition for musepack files
+	* updated dependencies list to include file >= 4.16
+
+2005-10-29	thetroublemaker <thetroublemaker@inventati.org>
+
+	* we now look for mppdec to see if we can decode mpc files,
+	  instead of mppdenc
+	* we now look for faad to see if we can decode aac files,
+	  instead of faac
+	* fixed a bug that prevented the program from runnin' if
+	  faac wasn't installed
+
+=== audio-convert 0.3.0 ===
+
+2005-10-27	thetroublemaker <thetroublemaker@inventati.org>
+
+	* added aac to check for formats to pass metatags from
+	* aac support completed
+
+2005-10-26	thetroublemaker <thetroublemaker@inventati.org>
+
+	* added function to extract aac metatags
+
+2005-10-21	thetroublemaker <thetroublemaker@inventati.org>
+
+	* added decode/encode functions for aac
+	* added encodin' functions from any format into aac
+	* added function to recognize aac type
+	* added decodin' functions from aac into any format
+	* added function to parse aac fields
+	* added aac to the check for supported formats
+	* added aac to the formats to convert to
+	* added function to get aac quality
+	* you can now edit metatags for aac files
+
+=== audio-convert 0.2.4 ===
+
+2005-10-09	thetroublemaker <thetroublemaker@inventati.org>
+
+	* added polish translation thanks to Laki73
+
+2005-10-08	thetroublemaker <thetroublemaker@inventati.org>
+
+	* fixed a bug that made files with dots in their name not supported
+	* fixed a bug that assumed the first filetype was constant for every file
+	  while collectin' metatags
+	* completely rewrote filetype checks
+	* rewrote check to see if output file already exists
+
+=== audio-convert 0.2.3 ===
+
+2005-09-18	thetroublemaker <thetroublemaker@inventati.org>
+
+	* updated german translation thanks to Mich Tepperis <mtepperi@ford.com>
+	* updated spanish translation thanks to alex munoz
+
+2005-09-17	thetroublemaker <thetroublemaker@inventati.org>
+
+	* added a check to make sure only non void metatags are used
+
+2005-09-16	thetroublemaker <thetroublemaker@inventati.org>
+
+	* it is now possible to pass metatags on from one format to another
+	* now a message warns about which codec is missin'
+
+=== audio-convert 0.2.2 ===
+
+2005-08-29	thetroublemaker <thetroublemaker@inventati.org>
+
+	* added check to make sure that the format to convert from is supported.
+	* added check to make sure that the user has the correct codec to decode the input file.
+	* now a message informs the user that the conversion has been completed.
+	* updated french translation thanks to Thus0 <thus0@free.fr>
+	* added spanish translation thanks to Reikinio <reikinio@gmail.com>
+	* added spanish readme thanks to Reikinio <reikinio@gmail.com>
+	* added a comment that explains that there's a german translation
+
+2005-08-28	thetroublemaker	<thetroublemaker@inventati.org>
+
+	* now for multiple files the artist and album metatag fields are remember through the files
+
+2005-08-04	thetroublemaker <thetroublemaker@inventati.org>
+
+	* now for flac and mac format the question asks for 'compression level' instead of 'quality'
+
+2005-08-03	thetroublemaker <thetroublemaker@inventati.org>
+
+	* corrected two grammar imprecisions in the english translation
+
+=== audio-convert 0.2.1 ===
+
+2005-07-31	thetroublemaker <thetroublemaker@inventati.org>
+
+	* added german translation from lukaz <lerni@gmx.ch>
+	* made it so that now you can edit metatags in flac files too
+
+2005-07-18	thetroublemaker <thetroublemaker@inventati.org>
+
+	* added a question so one can choose whether bein' asked a confirmation for every file
+	  to convert
+
+=== audio-convert 0.2 ===
+
+2005-07-15	thetroublemaker <thetroublemaker@inventati.org>
+
+	* made it so that quality of compression is asked only once per group of files
+	* added a question that initially asks if you want to fill in metatags data for a file
+	  or a group of files, in case of conversion to ogg or mp3
+	* question asking for confirmation to convert a file now actually skips the file if
+	  answered 'cancel'
+	* version 0.2 released!
+
+2005-07-14	thetroublemaker <thetroublemaker@inventati.org>
+
+	* removed "-2" option from ogg encoding, which was non existent
+	* added brazilian portuguese translation, by sapo <supoerte@xgn.com.br>
+	* added dutch translation, by rainmaker from forums.gentoo.org
+
+=== audio-convert 0.1.1 ===
+
+2005-07-09	thetroublemaker <thetroublemaker@inventati.org>
+
+	* added progress bars for decoding processes
+	* many bugfixes
+	* audio-convert 0.1.1 released!
+
+=== audio-convert 0.1 ===
+
+2005-07-02	thetroublemaker <thetroublemaker@inventati.org>
+
+	* audio-convert 0.1 released!

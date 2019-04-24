@@ -1,0 +1,38 @@
+
+july the eleventh, twothousandandfive
+
+
+=== introduction ===
+
+hi everyone! someone has asked me to make some documentation for the script, so here it is.
+
+
+=== how to make use of the various natures of the script ===
+
+	* to install it as a nautilus script, copy 'audio-convert' in /usr/bin, then run 'audio-convert-install'. or, follow the instructions on this link: http://g-scripts.sourceforge.net/faq.php.
+
+	* to install it as a rox script, no clue yet, but someone did make it work : )
+
+	* to use it as a plain bash script, provided you have access to an x session and have zenity installed, simply type: path/to/audio-convert path/to/filename... and specify as many filenames as you want. they will be processed one by one, just as it happens when you select multiple files on nautilus or rox.
+
+
+=== what do some values mean? ===
+
+	* i hope quality choice for mp3, ogg, and mpc formats are pretty self-explanatory. if they're not, please let me know. all i can explain for now is that they are in asending order. the first parameter is the lowest quality possible, whereas the last one is the highest quality. the suggested value is usually close to best.
+	* as far as flac and ape formats go, maybe there is some explainin' to do. the values are all in ascending order, like all the other ones. but since these are lossless formats, why would one have to choose the quality? quality in this case stands for 'quality of compression'. the highest the quality, the more compressed the resultin' files. not that while choosin' the highest quality is generally the best thing to do, it *will* take longer to compress the files.
+
+=== what codecs are needed? where can i find them? ===
+
+	* lame: to encode/decode mp3's. found at http://lame.sourceforge.net
+	* oggenc (vorbis-tools): to encode ogg's. found at http://www.xiph.org/downloads
+	* oggdec (vorbis-tools): to decode ogg's. found at http://www.xiph.org/downloads
+	* mppenc: to encode mpc's. found at http://www.rarewares.org/mpc.html
+	* mppdec: to decode mpc's. found at http://www.rarewares.org/mpc.html
+	* faac: to encode aac's. found at http://www.audiocoding.com
+	* faad: to decode aac's. found at http://www.audiocoding.com
+	* flac: to encode/decode flac's. found at http://flac.sourceforge.net
+	* mac: to encode/decode mac's. can't remember where i found it. look for it. it's out there : ) but really, if you find it, type me the address in an email! thankyou! : )
+
+=== the end ===
+
+this is it for now. i will update this document in case i feel like, or in case you suggest me some really good improvements to it. and remember, please make suggestions about how to make the script better, point me out bugs, and let me know what you think, either at the main page of this project, http://savannah.nongnu.org/projects/audio-convert/, or at my email address, <thetroublemaker@inventati.org>! enjoy! : )
